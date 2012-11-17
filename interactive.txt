@@ -1,0 +1,108 @@
+from google.appengine.ext import db
+from django.utils import simplejson
+
+class Grams(db.Model):
+	author = db.StringProperty()
+	content = db.StringProperty(multiline=True)
+	date = db.DateTimeProperty(auto_now_add=True)
+
+def add(name, content):
+    t = Grams()
+    t.author = name
+    t.content = content
+    t.put()
+
+add('Arun', 'First Message')
+add('Arun', 'Second Message')
+add('Arun', 'Third Message')
+
+print 'End'
+----------------------
+
+
+from google.appengine.ext import db
+from django.utils import simplejson
+
+class Grams(db.Model):
+	author = db.StringProperty()
+	content = db.StringProperty(multiline=True)
+	date = db.DateTimeProperty(auto_now_add=True)
+
+entries = db.GqlQuery("SELECT * FROM Grams")
+
+print len(entries)
+--------------------
+
+
+from google.appengine.ext import db
+from django.utils import simplejson
+
+class Grams(db.Model):
+	author = db.StringProperty()
+	content = db.StringProperty(multiline=True)
+	date = db.DateTimeProperty(auto_now_add=True)
+
+def add(name, content):
+    t = Grams()
+    t.author = name
+    t.content = content
+    t.put()
+
+add('Billa', 'This is billa\'s first message')
+add('Jackie', 'This is Jackie\'s second message')
+add('Smitha', 'THis is smith\'s message')
+add('Shalony', 'This is shal message')
+add('Britta','This is britta message')
+
+print 'End'
+------------------------------------------
+
+from google.appengine.ext import db
+from django.utils import simplejson
+
+class Grams(db.Model):
+	author = db.StringProperty()
+	content = db.StringProperty(multiline=True)
+	date = db.DateTimeProperty(auto_now_add=True)
+
+def add(name, content):
+    t = Grams()
+    t.author = name
+    t.content = content
+    t.put()
+
+add('person a 1', 'this is the first message')
+add('person a 2', 'this is the second message')
+add('person a 3', 'this is the third message')
+add('person a 4', 'this is the fourth message')
+add('person a 5', 'this is the fifth message')
+add('person a 6', 'this is the sixth message')
+
+
+print 'End'
+-----------------
+
+
+from google.appengine.ext import db
+from django.utils import simplejson
+
+class Grams(db.Model):
+	author = db.StringProperty()
+	content = db.StringProperty(multiline=True)
+	date = db.DateTimeProperty(auto_now_add=True)
+
+def add(name, content):
+    t = Grams()
+    t.author = name
+    t.content = content
+    t.put()
+
+add('person ab 1', 'this is the first message')
+add('person ab 2', 'this is the second message')
+add('person ab 3', 'this is the third message')
+add('person ab 4', 'this is the fourth message')
+add('person ab 5', 'this is the fifth message')
+add('person ab 6', 'this is the sixth message')
+
+
+print 'End'

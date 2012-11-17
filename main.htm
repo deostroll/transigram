@@ -1,0 +1,274 @@
+<html>
+	<head>
+		<title>transigram</title>
+		<script type="text/javascript" src="static/jquery-1.8.2.min.js"></script>
+		<script type="text/javascript" src="static/transigram.js"></script>
+		<script type="text/javascript">
+			var isFirstTime;
+			var arrData = [];
+			var thisPage;
+			var tableHasARow;
+			function getMarkup(item){
+				var txt = $(thisPage.template).text();
+					var markup = $(
+						txt.replace('##1##', item.id)
+						.replace('##2##', item.author)
+						.replace('##3##', item.date)
+						.replace('##4##', item.time)
+						.replace('##5##', item.content)
+						);
+					return markup;
+			}
+			function setPostFormEnabled(flag){
+				if(flag){
+					//_debug('enabling', true);
+					$('.equalize').removeAttr('disabled')
+				}
+				else{
+					$('.equalize').attr('disabled', 'disabled');
+				}
+			}
+			
+			function getNextItem(interval){
+				_debug('>> getNextItem() executed');
+				_debug('Interval: ' + interval, true);
+				window.setTimeout(function(){
+					_debug('>> getNextItem() timeout executed after ' + interval + ' milliseconds');
+					if(arrData.length > 0){
+						var item = arrData.pop();
+						addItem(item);
+					}		
+					else
+						getNextItem(5000);
+				}, interval);
+			}
+			
+			function addItem(item){
+				_debug('>> addItem() executed');
+				_debug(item, true);
+				if(tableHasARow == null){
+					_debug('Setting variable tableHasARow');
+					tableHasARow = $('#shouts tr').length > 0;
+					_debug('tableHasARow: ' + tableHasARow, true);
+				}
+				
+				if(tableHasARow){
+					_debug('adding row before first row');
+					var firstItem = $('#shouts tbody tr:first');
+					var markup = getMarkup(item);
+					markup.insertBefore(firstItem);
+					markup.hide();
+					markup.show('slow', 
+						function(){
+							if(arrData.length != 0)
+								getNextItem(1500);
+							else
+								getNextItem(5000);
+						});
+				}
+				else{
+					//add the bloody item
+					_debug('adding item as first row');
+					var markup = getMarkup(item);
+					$('#shouts').append(markup);
+					markup.hide().show('slow', function(){
+						if(arrData.length!=0)
+							getNextItem(1500);
+						else
+							getNextItem(5000);
+					});
+					tableHasARow = true;
+				}
+				
+				if($('#shouts tbody tr').length > 5){
+					_debug('removing...', true);
+					$('#shouts tbody tr:last').remove();
+				}
+				_debug('>> additem() exit');
+			}
+			
+			function doPost(){
+				thisApp.set({ 
+					username: thisPage.uBox.value, 
+					content: thisPage.messageBox.value });
+				thisApp.post();
+			}
+			
+			var opts = {
+				onSubmit: function(){
+					setPostFormEnabled(false);
+					$('input,textarea').each(function(){
+						if(this.tagName.toLowerCase() == 'input' && this.type == 'button'){
+							return;
+						}
+						$(this).val('');
+					});
+				},
+				onRefresh: function(edata){
+					_debug('__ onRefresh() executed');
+					setPostFormEnabled(true);
+					if(edata.data.length > 0){
+						_debug('Items available');
+						_debug(edata, true);
+						if(arrData.length == 0){
+							for(var i = 0, j = edata.data.length ; i < j; i++){
+								arrData.push(edata.data[i]);
+							}
+							_debug('Items pushed to arrData', true);
+							_debug('last_id:' + edata.data[0].id, true);
+							thisApp.setLastId(edata.data[0].id);
+						}
+						
+					}
+				},
+				onStart: function(){
+					getNextItem(5000);
+					$('a').click(function(e){
+						var href = $(this).attr('href');
+						if(href == '/add'){
+							$.ajax({'url': '/add'});
+							e.preventDefault();
+						}
+					});
+				},
+				onStatusCallback: function(obj){
+					if(obj.posting){
+						thisPage.status.className = 'posting';
+						return;
+					}
+					else if (obj.getting) {
+						thisPage.status.className = 'getting';
+						return;
+					}
+					else
+						thisPage.status.className = 'idle';
+				}
+			};
+			
+			thisApp.setEvents(opts);
+			window.onload = function(){
+				thisPage = {
+						messageBox: document.getElementById('msg'),
+						sBox: document.getElementById('shouts'),
+						status: document.getElementById('lblStatus'),
+						template: document.getElementById('template'),
+						uBox: document.getElementById('username')
+					};
+				thisApp.setLastId('{{ lastID }}');
+				thisApp.start();
+				$('#btnPost').click(function(){
+					doPost();
+				});
+			};
+		</script>
+		<style type="text/css">
+			body, input, textarea { font-family: Arial; font-size:10pt; }
+			#content { width:100%; }
+			#content tr { vertical-align: top; }
+			.equalize { width:100%; }
+			
+			#form { width: 100%; }
+			
+			#form fieldset table { width:100% }
+			#form fieldset textarea { height:105px; }
+			.give_width { width: 200px; }
+			.author { font-size:14pt; font-weight:bold }
+			.time { font-size:8pt; }
+			.idle { background-color:#F5B800; color: #F5B800;}
+			.getting { background-color:#66FF33; color:#66FF33; }
+			.posting { background-color:#CC33FF;color:#CC33FF; }
+			#shouts { width:100%; }
+			#shouts tr td:first-child { background-color:#e0d0d0; width:23%; padding-left:7px;}
+			#shouts tr td:last-child { border-bottom: 2px solid #e0d0d0; }
+			#footer { width:100%; text-align:center; font-size:8pt }
+		</style>
+	</head>
+	<body>
+		<div id="header">
+			<h2>Transigram</h2>
+			<div>
+				<p>You can post your message, see it hanging around for a while; and then it just disappears. *poof*</p>
+			</div>
+		</div>
+		<div id="bounding" style="width:100%">
+			<table id="content">
+				<tr>
+					<td>
+						<span style="font-size:8pt">
+							<a href="/clear">Delete All Records</a> |
+							<a href="/add">Add Records</a>
+						</span>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<table id="shouts">
+						{% for gram in grams %}
+							<tr id="{{ gram.id }}">
+								<td>
+									<p><span class="author">{{ gram.author }}</span> wrote:</p>
+									<p><span class="time">{{ gram.date }} - {{ gram.time }}</span></p>
+								</td>
+								<td>
+									{{ gram.content }}
+								</td>
+							</tr>
+						{% endfor %}
+						</table>
+					</td>
+					<td>
+						<div id="form">
+							<fieldset>
+								<legend>Post it!!!</legend>
+								<table>
+									<tr>
+										<td>Your name:</td>
+									</tr>
+									<tr>
+										<td>
+											<input class="equalize" id="username" type="text" />
+										</td>
+									</tr>
+									<tr>
+										<td>
+											Your Message:
+										</td>
+									</tr>
+									<tr>
+										<td>
+											<textarea class="equalize" id="msg"></textarea>
+										</td>
+									</tr>
+									<tr>
+										<td>
+											<input class="equalize" type="button" value="Post" id="btnPost"/>
+										</td>
+									</tr>
+								</table>
+							</fieldset>
+						</div>
+					</td>
+				</tr>
+				<tr>
+					<td><label class="idle" id="lblStatus">status</label>
+					
+					</td>
+				</tr>
+			</table>
+		</div>
+	<script id="template" type="text/plain">
+		<tr id="##1##">
+			<td>
+				<p><span class="author">##2##</span> wrote:</p>
+				<p><span class="time">##3## - ##4##</span></p>
+			</td>
+			<td>
+				##5##
+			</td>
+		</tr>
+	</script>
+	<div id="footer">
+		Convinced I can work with the Google Appengine...??
+	</div>
+	</body>
+</html>
